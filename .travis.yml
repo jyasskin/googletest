@@ -5,7 +5,7 @@
 
 install:
 # /usr/bin/gcc is 4.6 always, but gcc-X.Y is available.
-- if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+- if [ "$CXX" = "g++" ] && [ "$GCC_46" != "ON" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
 # /usr/bin/clang is 3.4, lets override with modern one.
 - if [ "$CXX" = "clang++" ] && [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
 - echo ${PATH}
@@ -35,12 +35,26 @@ compiler:
   - clang
 script: ./travis.sh
 env:
+  global:
+    - SHARED_LIB=OFF
+    - STATIC_LIB=ON
+    - CMAKE_PKG=OFF
+    - BUILD_TYPE=debug
+    - VERBOSE_MAKE=true
   matrix:
-    - GTEST_TARGET=googletest SHARED_LIB=OFF STATIC_LIB=ON CMAKE_PKG=OFF BUILD_TYPE=debug   VERBOSE_MAKE=true VERBOSE
-    - GTEST_TARGET=googlemock SHARED_LIB=OFF STATIC_LIB=ON CMAKE_PKG=OFF BUILD_TYPE=debug   VERBOSE_MAKE=true VERBOSE
-    - GTEST_TARGET=googlemock SHARED_LIB=OFF STATIC_LIB=ON CMAKE_PKG=OFF BUILD_TYPE=debug CXX_FLAGS=-std=c++11  VERBOSE_MAKE=true VERBOSE
+    - GTEST_TARGET=googletest
+    - GTEST_TARGET=googletest CXX_FLAGS=-std=c++0x GCC_46=ON
+    - GTEST_TARGET=googlemock
+    - GTEST_TARGET=googlemock CXX_FLAGS=-std=c++11
+    - GTEST_TARGET=googlemock CXX_FLAGS=-std=c++0x GCC_46=ON
 #    - GTEST_TARGET=googletest SHARED_LIB=ON  STATIC_LIB=ON CMAKE_PKG=ON  BUILD_TYPE=release VERBOSE_MAKE=false
 #    - GTEST_TARGET=googlemock SHARED_LIB=ON  STATIC_LIB=ON CMAKE_PKG=ON  BUILD_TYPE=release VERBOSE_MAKE=false
+matrix:
+  exclude:
+  - compiler: clang
+    env:
+    - GTEST_TARGET=googletest CXX_FLAGS=-std=c++0x GCC_46=ON
+    - GTEST_TARGET=googlemock CXX_FLAGS=-std=c++0x GCC_46=ON
 notifications:
   email: false
 sudo: false
